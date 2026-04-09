@@ -24,7 +24,6 @@
 
         .header { text-align: center; margin-bottom: 40px; }
         .header h1 { font-size: 2.5rem; margin: 0; letter-spacing: 2px; text-transform: uppercase; }
-        .header p { opacity: 0.7; font-size: 1rem; }
 
         #leaderboard-container {
             width: 100%; max-width: 900px;
@@ -36,11 +35,11 @@
             padding: 40px;
             box-shadow: 0 25px 50px rgba(0,0,0,0.3);
             position: relative;
-            min-height: 200px;
-            transition: height 0.5s ease;
+            /* Height is handled by JavaScript */
+            transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        #bars {
+        #bars-area {
             position: relative;
             width: 100%;
         }
@@ -49,8 +48,8 @@
             position: absolute;
             width: 100%;
             left: 0;
+            /* This is what makes them slide past each other */
             transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
-            margin-bottom: 25px;
         }
 
         .bar-info {
@@ -61,11 +60,12 @@
         .bar-bg {
             height: 35px; background: rgba(255,255,255,0.05);
             border-radius: 50px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
         }
 
         .bar-fill {
             height: 100%; width: 0%; border-radius: 50px;
-            transition: width 1s cubic-bezier(0.1, 0.7, 0.1, 1);
+            transition: width 1s cubic-bezier(0.1, 0.7, 0.1, 1), background 0.8s ease;
             box-shadow: 0 0 20px rgba(255,255,255,0.1);
         }
 
@@ -75,78 +75,78 @@
         }
 
         .score-val {
-            transition: transform 0.3s ease;
             display: inline-block;
+            transition: transform 0.3s ease;
         }
 
-        .score-bump { transform: scale(1.3); color: #fff; }
+        .bump { transform: scale(1.3); color: #fff; }
 
         #status { font-size: 0.8rem; margin-top: 20px; opacity: 0.5; }
-
-        /* Animation for new entries */
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .new-entry { animation: slideIn 0.5s forwards; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>Leaderboard</h1>
-        <p>Real-time Quiz Performance</p>
+        <h1>Live Leaderboard</h1>
+        <p>Dynamic Ranking Presentation</p>
     </div>
 
     <div id="leaderboard-container">
-        <div id="bars">
-            <p id="loading-text" style="text-align:center; opacity:0.5;">Waiting for participants...</p>
+        <div id="bars-area">
+            <p id="placeholder" style="text-align:center; opacity:0.5;">Awaiting synchronized data...</p>
         </div>
     </div>
 
-    <div id="status">Last synced: Never</div>
+    <div id="status">Syncing...</div>
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8cAX3_Rfe1zKCi9ayjYmoFQ7Msp1dCDMql2FJ4jTX9gqyzA53Wf2NjkfXrTT53Kv1/exec";
     const TOTAL_POINTS = 45; 
-    const BAR_HEIGHT = 85; // Height + Margin of each bar row
+    const SLOT_HEIGHT = 90; // Fixed vertical space for each player
 
     const PALETTE = [
-        'linear-gradient(90deg, #f87171, #ef4444)', // Red
-        'linear-gradient(90deg, #fbbf24, #f59e0b)', // Amber
-        'linear-gradient(90deg, #34d399, #10b981)', // Emerald
-        'linear-gradient(90deg, #60a5fa, #3b82f6)', // Blue
-        'linear-gradient(90deg, #818cf8, #6366f1)', // Indigo
-        'linear-gradient(90deg, #a78bfa, #8b5cf6)', // Violet
-        'linear-gradient(90deg, #f472b6, #ec4899)', // Pink
-        'linear-gradient(90deg, #fb7185, #f43f5e)', // Rose
-        'linear-gradient(90deg, #22d3ee, #06b6d4)', // Cyan
-        'linear-gradient(90deg, #fb923c, #f97316)'  // Orange
+        'linear-gradient(90deg, #f87171, #ef4444)', // 1st
+        'linear-gradient(90deg, #fbbf24, #f59e0b)', // 2nd
+        'linear-gradient(90deg, #34d399, #10b981)', // 3rd
+        'linear-gradient(90deg, #60a5fa, #3b82f6)', 
+        'linear-gradient(90deg, #818cf8, #6366f1)', 
+        'linear-gradient(90deg, #a78bfa, #8b5cf6)', 
+        'linear-gradient(90deg, #f472b6, #ec4899)', 
+        'linear-gradient(90deg, #fb7185, #f43f5e)', 
+        'linear-gradient(90deg, #22d3ee, #06b6d4)', 
+        'linear-gradient(90deg, #fb923c, #f97316)'  
     ];
 
     async function updateLeaderboard() {
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getRankings`);
             const data = await response.json();
-            const container = document.getElementById('bars');
-            const loadingText = document.getElementById('loading-text');
+            const area = document.getElementById('bars-area');
+            const placeholder = document.getElementById('placeholder');
 
-            if (data.length > 0 && loadingText) loadingText.remove();
+            if (data.length > 0 && placeholder) placeholder.remove();
 
-            // Adjust container height based on number of players
-            document.getElementById('leaderboard-container').style.height = (data.length * BAR_HEIGHT + 40) + "px";
+            // 1. Adjust the Main Container Height
+            document.getElementById('leaderboard-container').style.height = (data.length * SLOT_HEIGHT) + "px";
+
+            // 2. Track current active players to remove old ones
+            const activeIds = data.map(p => "id-" + btoa(p.name).substring(0,10));
 
             data.forEach((player, index) => {
-                let wrapper = document.getElementById(`player-${player.name.replace(/\s+/g, '')}`);
-                const percentage = (player.score / TOTAL_POINTS) * 100;
+                const uniqueId = "id-" + btoa(player.name).substring(0,10);
+                let wrapper = document.getElementById(uniqueId);
+                const scorePct = (player.score / TOTAL_POINTS) * 100;
+                const topPos = index * SLOT_HEIGHT;
                 const color = PALETTE[index % PALETTE.length];
-                const topPosition = index * BAR_HEIGHT;
 
                 if (!wrapper) {
-                    // Create NEW bar if it doesn't exist
+                    // Create New Bar
                     wrapper = document.createElement('div');
-                    wrapper.id = `player-${player.name.replace(/\s+/g, '')}`;
-                    wrapper.className = 'bar-wrapper new-entry';
+                    wrapper.id = uniqueId;
+                    wrapper.className = 'bar-wrapper';
+                    wrapper.style.transform = `translateY(${topPos}px)`;
+                    wrapper.style.opacity = "0";
+                    
                     wrapper.innerHTML = `
                         <div class="bar-info">
                             <span><span class="rank-tag">#${index + 1}</span> ${player.name}</span>
@@ -156,39 +156,49 @@
                             <div class="bar-fill" style="width: 0%; background: ${color};"></div>
                         </div>
                     `;
-                    container.appendChild(wrapper);
-                    // Trigger bar growth after element is added to DOM
+                    area.appendChild(wrapper);
+                    
+                    // Fade in and grow bar
                     setTimeout(() => {
-                        wrapper.querySelector('.bar-fill').style.width = percentage + "%";
-                    }, 100);
+                        wrapper.style.opacity = "1";
+                        wrapper.querySelector('.bar-fill').style.width = scorePct + "%";
+                    }, 50);
                 } else {
-                    // UPDATE existing bar
-                    wrapper.style.transform = `translateY(${topPosition}px)`;
+                    // Update Existing Bar Position and Data
+                    wrapper.style.transform = `translateY(${topPos}px)`;
                     wrapper.querySelector('.rank-tag').innerText = `#${index + 1}`;
                     
                     const scoreEl = wrapper.querySelector('.score-val');
                     const fillEl = wrapper.querySelector('.bar-fill');
 
-                    // If score changed, animate it
                     if (scoreEl.innerText !== `${player.score} Pts`) {
                         scoreEl.innerText = `${player.score} Pts`;
-                        scoreEl.classList.add('score-bump');
-                        setTimeout(() => scoreEl.classList.remove('score-bump'), 300);
-                        fillEl.style.width = percentage + "%";
-                        fillEl.style.background = color; // Dynamic color based on current rank
+                        scoreEl.classList.add('bump');
+                        setTimeout(() => scoreEl.classList.remove('bump'), 400);
+                        
+                        fillEl.style.width = scorePct + "%";
+                        fillEl.style.background = color; // Morph color to new rank
                     }
                 }
             });
 
-            document.getElementById('status').innerText = `Last synced: ${new Date().toLocaleTimeString()}`;
+            // 3. Remove players who are no longer in the top data
+            document.querySelectorAll('.bar-wrapper').forEach(el => {
+                if (!activeIds.includes(el.id)) {
+                    el.style.opacity = "0";
+                    el.style.transform += " scale(0.9)";
+                    setTimeout(() => el.remove(), 600);
+                }
+            });
 
-        } catch (error) {
-            console.error("Fetch error:", error);
-            document.getElementById('status').innerText = "Sync Error: Retrying...";
+            document.getElementById('status').innerText = `Live • Last Update: ${new Date().toLocaleTimeString()}`;
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('status').innerText = "Reconnecting to sheet...";
         }
     }
 
-    // Refresh every 3 seconds
     setInterval(updateLeaderboard, 3000);
     updateLeaderboard();
 </script>
