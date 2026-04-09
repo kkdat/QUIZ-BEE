@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    :root {
+      --primary: #2c3e50;
+      --accent: #2980b9;
+      --bg: #f8f9fa;
+      --text: #333;
+    }
+    body { 
+      font-family: 'Inter', -apple-system, sans-serif; 
+      background-color: var(--bg); 
+      display: flex; justify-content: center; align-items: center; 
+      height: 100vh; margin: 0; color: var(--text);
+    }
+    #quiz-container { 
+      background: white; padding: 2.5rem; border-radius: 16px; 
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
+      width: 90%; max-width: 550px; 
+    }
+    .header { text-align: center; margin-bottom: 2rem; }
+    .difficulty-tag {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: bold; text-transform: uppercase;
+      margin-bottom: 10px; background: #e0e0e0;
+    }
+    .progress-bar { height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
+    .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease; }
+    
+    .question-container {
+      background: #fdfdfd; border: 1px solid #eee; padding: 20px;
+      border-radius: 10px; margin-bottom: 25px;
+    }
+    .question-text { font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; color: var(--primary); }
+    .options-list { text-align: left; list-style: none; padding: 0; margin: 0; color: #555; line-height: 1.6; }
+    
+    .button-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .opt-btn { 
+      aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; 
+      background: white; font-size: 1.2rem; font-weight: 700; color: var(--primary);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .opt-btn:hover { border-color: var(--accent); background: #f0f7ff; color: var(--accent); }
+    
+    .input-group { text-align: center; }
+    input[type="text"] { 
+      width: 100%; padding: 12px; margin-bottom: 20px; box-sizing: border-box;
+      border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;
+    }
+    .primary-btn { 
+      background: var(--primary); color: white; border: none; 
+      padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 1rem;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<div id="quiz-container">
+  <div id="start-screen" class="input-group">
+    <h1 style="margin-top:0">Academic Quiz Bee</h1>
+    <p>Please enter your full name to begin the assessment.</p>
+    <input type="text" id="username" placeholder="Participant Name" autocomplete="off">
+    <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <div id="quiz-content" class="hidden">
+    <div class="header">
+      <div id="diff-tag" class="difficulty-tag">Easy</div>
+      <div class="progress-bar"><div id="prog-fill" class="progress-fill" style="width: 0%"></div></div>
+      <small id="q-counter">Question 1 of 15</small>
+    </div>
+
+    <div class="question-container">
+      <div id="question-text" class="question-text">Loading question...</div>
+      <ul id="options-display" class="options-list"></ul>
+    </div>
+
+    <div class="button-grid">
+      <button class="opt-btn" onclick="handleAnswer('A')">A</button>
+      <button class="opt-btn" onclick="handleAnswer('B')">B</button>
+      <button class="opt-btn" onclick="handleAnswer('C')">C</button>
+      <button class="opt-btn" onclick="handleAnswer('D')">D</button>
+    </div>
+  </div>
+
+  <div id="end-screen" class="hidden" style="text-align:center">
+    <h2 style="color: #27ae60">Submission Successful</h2>
+    <p id="final-score" style="font-size: 1.2rem; font-weight: bold"></p>
+    <p>Your responses have been logged to the coordinator's sheet.</p>
+    <button class="primary-btn" onclick="location.reload()">Restart</button>
+  </div>
+</div>
+
+<script>
+  let questions = [];
+  let currentIndex = 0;
+  let score = 0;
+  let userName = "";
+  let itemResults = [];
+
+  function startQuiz() {
+    userName = document.getElementById('username').value.trim();
+    if(!userName) return alert("Please enter your name.");
+    
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('quiz-content').classList.remove('hidden');
+    
+    google.script.run.withSuccessHandler(data => {
+      questions = data;
+      loadQuestion();
+    }).getQuestions();
+  }
+
+  function loadQuestion() {
+    const q = questions[currentIndex];
+    
+    // Update Meta
+    document.getElementById('diff-tag').innerText = q.level;
+    document.getElementById('q-counter').innerText = `Question ${currentIndex + 1} of 15`;
+    document.getElementById('prog-fill').style.width = `${((currentIndex + 1) / 15) * 100}%`;
+    
+    // Update Question Container
+    document.getElementById('question-text').innerText = q.q;
+    const list = document.getElementById('options-display');
+    list.innerHTML = q.options.map(opt => `<li>${opt}</li>`).join('');
+  }
+
+  function handleAnswer(choice) {
+    const isCorrect = (choice === questions[currentIndex].correct);
+    if(isCorrect) score++;
+    itemResults.push(isCorrect ? "Correct" : "Incorrect");
+    
+    currentIndex++;
+    if(currentIndex < questions.length) {
+      loadQuestion();
+    } else {
+      finishQuiz();
+    }
+  }
+
+  function finishQuiz() {
+    document.getElementById('quiz-content').classList.add('hidden');
+    document.getElementById('end-screen').classList.remove('hidden');
+    document.getElementById('final-score').innerText = `${userName}, Score: ${score} / 15`;
+    
+    google.script.run.submitScore(userName, score, itemResults);
+  }
+</script>
+
+</body>
+</html>
