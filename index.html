@@ -3,55 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Quiz Bee</title>
+    <title>Elite Quiz Bee 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2c3e50; --accent: #2980b9; --bg: #f8f9fa; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        #quiz-container { background: white; padding: 2.5rem; border-radius: 15px; box-shadow: 0 12px 30px rgba(0,0,0,0.15); width: 95%; max-width: 550px; }
-        .difficulty-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; background: #ecf0f1; color: var(--primary); margin-bottom: 10px; }
-        .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
-        .progress-fill { height: 100%; background: var(--accent); transition: width 0.4s; width: 0%; }
-        .question-box { background: #fdfdfd; border: 1px solid #eaeff2; padding: 25px; border-radius: 12px; margin-bottom: 25px; }
-        .option-list { list-style: none; padding: 0; color: #555; }
-        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        .choice-btn { padding: 15px 0; border: 2px solid #dcdde1; border-radius: 10px; background: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; }
-        .choice-btn:hover { border-color: var(--accent); background: #f0f7ff; }
+        :root {
+            --primary: #1e293b;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        #quiz-container {
+            background: var(--card);
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        /* Typography & Layout */
+        h1 { font-size: 1.8rem; font-weight: 700; text-align: center; margin-bottom: 8px; }
+        p.subtitle { text-align: center; color: var(--text-muted); margin-bottom: 30px; font-size: 0.95rem; }
+
+        /* Progress Bar */
+        .header-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .badge { padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .badge-easy { background: #dcfce7; color: #166534; }
+        .badge-average { background: #fef9c3; color: #854d0e; }
+        .badge-hard { background: #fee2e2; color: #991b1b; }
+        
+        .progress-container { height: 6px; background: #e2e8f0; border-radius: 10px; margin-bottom: 30px; }
+        .progress-fill { height: 100%; background: var(--accent); border-radius: 10px; width: 0%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        /* Question Box */
+        .question-area { min-height: 180px; }
+        .question-text { font-size: 1.25rem; font-weight: 600; line-height: 1.4; margin-bottom: 20px; }
+        .options-display { list-style: none; padding: 0; margin-bottom: 30px; }
+        .options-display li { 
+            padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; 
+            border-radius: 12px; margin-bottom: 10px; font-size: 0.95rem; color: var(--text-muted);
+        }
+
+        /* Interaction Grid */
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .choice-btn {
+            aspect-ratio: 1/1; border: 2px solid #e2e8f0; border-radius: 16px;
+            background: white; font-size: 1.25rem; font-weight: 700; color: var(--primary);
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .choice-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1); }
+        .choice-btn:active { transform: translateY(0); }
+
+        /* Inputs & Buttons */
+        input[type="text"] {
+            width: 100%; padding: 14px 20px; border-radius: 12px; border: 2px solid #e2e8f0;
+            font-size: 1rem; margin-bottom: 20px; outline: none; transition: border-color 0.2s;
+        }
+        input[type="text"]:focus { border-color: var(--accent); }
+        .primary-btn {
+            width: 100%; padding: 16px; background: var(--primary); color: white;
+            border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+        }
+        .primary-btn:hover { opacity: 0.9; }
+
+        /* Utils */
         .hidden { display: none; }
-        .start-btn { background: var(--primary); color: white; border: none; padding: 12px 40px; border-radius: 8px; cursor: pointer; width: 100%; }
-        input[type="text"] { width: 100%; padding: 12px; margin: 20px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+        .fade-in { animation: fadeIn 0.4s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Result State */
+        .status-msg { font-weight: 600; color: var(--success); margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div id="quiz-container">
-    <div id="start-screen">
-        <h1 style="text-align:center">Quiz Bee 2026</h1>
-        <input type="text" id="username" placeholder="Enter Full Name">
-        <button class="start-btn" onclick="startQuiz()">Begin Quiz</button>
+    <div id="start-screen" class="fade-in">
+        <h1>Elite Quiz Bee</h1>
+        <p class="subtitle">15 Questions • 3 Difficulty Levels</p>
+        <input type="text" id="username" placeholder="Enter your full name" autocomplete="off">
+        <button class="primary-btn" onclick="startQuiz()">Enter Competition</button>
     </div>
 
     <div id="quiz-content" class="hidden">
-        <div id="diff-label" class="difficulty-badge">Level</div>
-        <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
-        <div class="question-box">
-            <div id="q-text" style="font-weight:600; font-size:1.2rem; margin-bottom:15px;"></div>
-            <ul id="opt-list" class="option-list"></ul>
+        <div class="header-meta">
+            <span id="diff-badge" class="badge">Easy</span>
+            <span id="q-counter" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Question 1/15</span>
         </div>
+        <div class="progress-container">
+            <div id="bar" class="progress-fill"></div>
+        </div>
+
+        <div class="question-area fade-in" id="q-frame">
+            <div id="q-text" class="question-text"></div>
+            <ul id="opt-list" class="options-display"></ul>
+        </div>
+
         <div class="btn-grid">
-            <button class="choice-btn" onclick="submitAnswer('A')">A</button>
-            <button class="choice-btn" onclick="submitAnswer('B')">B</button>
-            <button class="choice-btn" onclick="submitAnswer('C')">C</button>
-            <button class="choice-btn" onclick="submitAnswer('D')">D</button>
+            <button class="choice-btn" onclick="handleSelect('A')">A</button>
+            <button class="choice-btn" onclick="handleSelect('B')">B</button>
+            <button class="choice-btn" onclick="handleSelect('C')">C</button>
+            <button class="choice-btn" onclick="handleSelect('D')">D</button>
         </div>
     </div>
 
-    <div id="end-screen" class="hidden" style="text-align:center">
-        <h2>Submitting Results...</h2>
+    <div id="end-screen" class="hidden" style="text-align:center;">
+        <div id="loader">
+            <h2>Calculating Results...</h2>
+            <div class="progress-container"><div class="progress-fill" style="width: 100%; animation: pulse 1.5s infinite;"></div></div>
+        </div>
+        <div id="final-stats" class="hidden">
+            <h2 style="font-size: 2rem; margin-bottom: 10px;">Excellent!</h2>
+            <p id="score-text" style="font-size: 1.2rem; color: var(--text-muted);"></p>
+            <p class="status-msg">✓ Responses Securely Logged</p>
+            <button class="primary-btn" style="margin-top: 30px;" onclick="location.reload()">Return Home</button>
+        </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWsghUHNYe4D0sxOFGcf4mWNB2WTwjrUOzUH_1OvRVN-vyVUD6RWW6p0om-LRT6gl0/exec"; // PASTE YOUR URL HERE
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxWsghUHNYe4D0sxOFGcf4mWNB2WTwjrUOzUH_1OvRVN-vyVUD6RWW6p0om-LRT6gl0/exec"; 
 
     const questions = [
         {q: "What is the powerhouse of the cell?", options: ["A. Nucleus", "B. Mitochondria", "C. Ribosome", "D. Golgi Body"], correct: "B", level: "Easy"},
@@ -73,53 +162,68 @@
 
     let current = 0;
     let score = 0;
-    let results = [];
-    let userName = "";
+    let logs = [];
+    let uName = "";
 
     function startQuiz() {
-        userName = document.getElementById('username').value;
-        if(!userName) return alert("Enter name");
+        uName = document.getElementById('username').value.trim();
+        if(!uName) return alert("Please enter your name.");
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('quiz-content').classList.remove('hidden');
-        showQuestion();
+        render();
     }
 
-    function showQuestion() {
+    function render() {
         const q = questions[current];
-        document.getElementById('diff-label').innerText = q.level;
+        const frame = document.getElementById('q-frame');
+        
+        // Refresh animation
+        frame.classList.remove('fade-in');
+        void frame.offsetWidth; 
+        frame.classList.add('fade-in');
+
+        document.getElementById('q-counter').innerText = `Question ${current + 1}/15`;
         document.getElementById('bar').style.width = `${((current + 1)/15)*100}%`;
+        
+        const badge = document.getElementById('diff-badge');
+        badge.innerText = q.level;
+        badge.className = `badge badge-${q.level.toLowerCase()}`;
+
         document.getElementById('q-text').innerText = q.q;
         document.getElementById('opt-list').innerHTML = q.options.map(o => `<li>${o}</li>`).join('');
     }
 
-    function submitAnswer(ans) {
+    async function handleSelect(ans) {
         const isCorrect = ans === questions[current].correct;
         if(isCorrect) score++;
-        results.push(isCorrect ? "Correct" : "Incorrect");
-        
-        current++;
-        if(current < 15) showQuestion();
-        else finalize();
+        logs.push(isCorrect ? "Correct" : "Incorrect");
+
+        if(current < 14) {
+            current++;
+            render();
+        } else {
+            finish();
+        }
     }
 
-    async function finalize() {
+    async function finish() {
         document.getElementById('quiz-content').classList.add('hidden');
         document.getElementById('end-screen').classList.remove('hidden');
-        
-        const payload = { name: userName, score: score, details: results };
-        
+
         try {
-            // Using fetch to post to Google Script
             await fetch(SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors", // Required for Google Scripts
-                cache: "no-cache",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                mode: "no-cors",
+                body: JSON.stringify({ name: uName, score: score, details: logs })
             });
-            document.getElementById('end-screen').innerHTML = `<h2>Quiz Complete!</h2><p>${userName}, your score: ${score}/15</p>`;
+            
+            setTimeout(() => {
+                document.getElementById('loader').classList.add('hidden');
+                document.getElementById('final-stats').classList.remove('hidden');
+                document.getElementById('score-text').innerText = `${uName}, you successfully completed the challenge with a score of ${score}/15.`;
+            }, 1000);
         } catch (e) {
-            document.getElementById('end-screen').innerHTML = `<h2>Error saving results.</h2>`;
+            alert("Connection error. Results may not have saved.");
         }
     }
 </script>
