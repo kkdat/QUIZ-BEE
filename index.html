@@ -1,153 +1,127 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <style>
-    :root {
-      --primary: #2c3e50;
-      --accent: #2980b9;
-      --bg: #f8f9fa;
-      --text: #333;
-    }
-    body { 
-      font-family: 'Inter', -apple-system, sans-serif; 
-      background-color: var(--bg); 
-      display: flex; justify-content: center; align-items: center; 
-      height: 100vh; margin: 0; color: var(--text);
-    }
-    #quiz-container { 
-      background: white; padding: 2.5rem; border-radius: 16px; 
-      box-shadow: 0 15px 35px rgba(0,0,0,0.1); 
-      width: 90%; max-width: 550px; 
-    }
-    .header { text-align: center; margin-bottom: 2rem; }
-    .difficulty-tag {
-      display: inline-block; padding: 4px 12px; border-radius: 20px;
-      font-size: 0.75rem; font-weight: bold; text-transform: uppercase;
-      margin-bottom: 10px; background: #e0e0e0;
-    }
-    .progress-bar { height: 6px; background: #eee; border-radius: 10px; margin-bottom: 20px; overflow: hidden; }
-    .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s ease; }
-    
-    .question-container {
-      background: #fdfdfd; border: 1px solid #eee; padding: 20px;
-      border-radius: 10px; margin-bottom: 25px;
-    }
-    .question-text { font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; color: var(--primary); }
-    .options-list { text-align: left; list-style: none; padding: 0; margin: 0; color: #555; line-height: 1.6; }
-    
-    .button-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-    .opt-btn { 
-      aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; 
-      background: white; font-size: 1.2rem; font-weight: 700; color: var(--primary);
-      cursor: pointer; transition: all 0.2s;
-    }
-    .opt-btn:hover { border-color: var(--accent); background: #f0f7ff; color: var(--accent); }
-    
-    .input-group { text-align: center; }
-    input[type="text"] { 
-      width: 100%; padding: 12px; margin-bottom: 20px; box-sizing: border-box;
-      border: 1px solid #ccc; border-radius: 6px; font-size: 1rem;
-    }
-    .primary-btn { 
-      background: var(--primary); color: white; border: none; 
-      padding: 12px 30px; border-radius: 6px; cursor: pointer; font-size: 1rem;
-    }
-    .hidden { display: none; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Quiz Bee</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #2980b9; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        #quiz-container { background: white; padding: 2.5rem; border-radius: 15px; box-shadow: 0 12px 30px rgba(0,0,0,0.15); width: 95%; max-width: 550px; }
+        .difficulty-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; background: #ecf0f1; color: var(--primary); margin-bottom: 10px; }
+        .progress-bar { height: 8px; background: #eee; border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.4s; width: 0%; }
+        .question-box { background: #fdfdfd; border: 1px solid #eaeff2; padding: 25px; border-radius: 12px; margin-bottom: 25px; }
+        .option-list { list-style: none; padding: 0; color: #555; }
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .choice-btn { padding: 15px 0; border: 2px solid #dcdde1; border-radius: 10px; background: white; font-size: 1.2rem; font-weight: 800; cursor: pointer; }
+        .choice-btn:hover { border-color: var(--accent); background: #f0f7ff; }
+        .hidden { display: none; }
+        .start-btn { background: var(--primary); color: white; border: none; padding: 12px 40px; border-radius: 8px; cursor: pointer; width: 100%; }
+        input[type="text"] { width: 100%; padding: 12px; margin: 20px 0; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; }
+    </style>
 </head>
 <body>
 
 <div id="quiz-container">
-  <div id="start-screen" class="input-group">
-    <h1 style="margin-top:0">Academic Quiz Bee</h1>
-    <p>Please enter your full name to begin the assessment.</p>
-    <input type="text" id="username" placeholder="Participant Name" autocomplete="off">
-    <button class="primary-btn" onclick="startQuiz()">Start Quiz</button>
-  </div>
-
-  <div id="quiz-content" class="hidden">
-    <div class="header">
-      <div id="diff-tag" class="difficulty-tag">Easy</div>
-      <div class="progress-bar"><div id="prog-fill" class="progress-fill" style="width: 0%"></div></div>
-      <small id="q-counter">Question 1 of 15</small>
+    <div id="start-screen">
+        <h1 style="text-align:center">Quiz Bee 2026</h1>
+        <input type="text" id="username" placeholder="Enter Full Name">
+        <button class="start-btn" onclick="startQuiz()">Begin Quiz</button>
     </div>
 
-    <div class="question-container">
-      <div id="question-text" class="question-text">Loading question...</div>
-      <ul id="options-display" class="options-list"></ul>
+    <div id="quiz-content" class="hidden">
+        <div id="diff-label" class="difficulty-badge">Level</div>
+        <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
+        <div class="question-box">
+            <div id="q-text" style="font-weight:600; font-size:1.2rem; margin-bottom:15px;"></div>
+            <ul id="opt-list" class="option-list"></ul>
+        </div>
+        <div class="btn-grid">
+            <button class="choice-btn" onclick="submitAnswer('A')">A</button>
+            <button class="choice-btn" onclick="submitAnswer('B')">B</button>
+            <button class="choice-btn" onclick="submitAnswer('C')">C</button>
+            <button class="choice-btn" onclick="submitAnswer('D')">D</button>
+        </div>
     </div>
 
-    <div class="button-grid">
-      <button class="opt-btn" onclick="handleAnswer('A')">A</button>
-      <button class="opt-btn" onclick="handleAnswer('B')">B</button>
-      <button class="opt-btn" onclick="handleAnswer('C')">C</button>
-      <button class="opt-btn" onclick="handleAnswer('D')">D</button>
+    <div id="end-screen" class="hidden" style="text-align:center">
+        <h2>Submitting Results...</h2>
     </div>
-  </div>
-
-  <div id="end-screen" class="hidden" style="text-align:center">
-    <h2 style="color: #27ae60">Submission Successful</h2>
-    <p id="final-score" style="font-size: 1.2rem; font-weight: bold"></p>
-    <p>Your responses have been logged to the coordinator's sheet.</p>
-    <button class="primary-btn" onclick="location.reload()">Restart</button>
-  </div>
 </div>
 
 <script>
-  let questions = [];
-  let currentIndex = 0;
-  let score = 0;
-  let userName = "";
-  let itemResults = [];
+    const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE"; // PASTE YOUR URL HERE
 
-  function startQuiz() {
-    userName = document.getElementById('username').value.trim();
-    if(!userName) return alert("Please enter your name.");
-    
-    document.getElementById('start-screen').classList.add('hidden');
-    document.getElementById('quiz-content').classList.remove('hidden');
-    
-    google.script.run.withSuccessHandler(data => {
-      questions = data;
-      loadQuestion();
-    }).getQuestions();
-  }
+    const questions = [
+        {q: "What is the powerhouse of the cell?", options: ["A. Nucleus", "B. Mitochondria", "C. Ribosome", "D. Golgi Body"], correct: "B", level: "Easy"},
+        {q: "Which planet is known as the Red Planet?", options: ["A. Venus", "B. Mars", "C. Jupiter", "D. Saturn"], correct: "B", level: "Easy"},
+        {q: "What is the result of 15 + 27?", options: ["A. 42", "B. 32", "C. 44", "D. 39"], correct: "A", level: "Easy"},
+        {q: "How many colors are in a rainbow?", options: ["A. 6", "B. 8", "C. 7", "D. 9"], correct: "C", level: "Easy"},
+        {q: "Who is the primary author of the Declaration of Independence?", options: ["A. George Washington", "B. Benjamin Franklin", "C. Thomas Jefferson", "D. John Adams"], correct: "C", level: "Easy"},
+        {q: "What is the chemical symbol for Gold?", options: ["A. Gd", "B. Ag", "C. Au", "D. Fe"], correct: "C", level: "Average"},
+        {q: "Which country is the largest by land area?", options: ["A. China", "B. Canada", "C. Russia", "D. USA"], correct: "C", level: "Average"},
+        {q: "What is the square root of 225?", options: ["A. 13", "B. 14", "C. 15", "D. 16"], correct: "C", level: "Average"},
+        {q: "Who wrote the tragedy 'Hamlet'?", options: ["A. Marlowe", "B. Dickens", "C. Shakespeare", "D. Austen"], correct: "C", level: "Average"},
+        {q: "What is the largest ocean on Earth?", options: ["A. Atlantic Ocean", "B. Indian Ocean", "C. Pacific Ocean", "D. Arctic Ocean"], correct: "C", level: "Average"},
+        {q: "What is Pi to 4 decimal places?", options: ["A. 3.1415", "B. 3.1416", "C. 3.1414", "D. 3.1417"], correct: "B", level: "Hard"},
+        {q: "Which element has atomic number 79?", options: ["A. Platinum", "B. Gold", "C. Mercury", "D. Lead"], correct: "B", level: "Hard"},
+        {q: "What is the capital of Kazakhstan?", options: ["A. Almaty", "B. Astana", "C. Tashkent", "D. Bishkek"], correct: "B", level: "Hard"},
+        {q: "In what year did the French Revolution begin?", options: ["A. 1776", "B. 1789", "C. 1799", "D. 1804"], correct: "B", level: "Hard"},
+        {q: "What is the rarest blood type?", options: ["A. O negative", "B. AB negative", "C. Rh-null", "D. B positive"], correct: "C", level: "Hard"}
+    ];
 
-  function loadQuestion() {
-    const q = questions[currentIndex];
-    
-    // Update Meta
-    document.getElementById('diff-tag').innerText = q.level;
-    document.getElementById('q-counter').innerText = `Question ${currentIndex + 1} of 15`;
-    document.getElementById('prog-fill').style.width = `${((currentIndex + 1) / 15) * 100}%`;
-    
-    // Update Question Container
-    document.getElementById('question-text').innerText = q.q;
-    const list = document.getElementById('options-display');
-    list.innerHTML = q.options.map(opt => `<li>${opt}</li>`).join('');
-  }
+    let current = 0;
+    let score = 0;
+    let results = [];
+    let userName = "";
 
-  function handleAnswer(choice) {
-    const isCorrect = (choice === questions[currentIndex].correct);
-    if(isCorrect) score++;
-    itemResults.push(isCorrect ? "Correct" : "Incorrect");
-    
-    currentIndex++;
-    if(currentIndex < questions.length) {
-      loadQuestion();
-    } else {
-      finishQuiz();
+    function startQuiz() {
+        userName = document.getElementById('username').value;
+        if(!userName) return alert("Enter name");
+        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('quiz-content').classList.remove('hidden');
+        showQuestion();
     }
-  }
 
-  function finishQuiz() {
-    document.getElementById('quiz-content').classList.add('hidden');
-    document.getElementById('end-screen').classList.remove('hidden');
-    document.getElementById('final-score').innerText = `${userName}, Score: ${score} / 15`;
-    
-    google.script.run.submitScore(userName, score, itemResults);
-  }
+    function showQuestion() {
+        const q = questions[current];
+        document.getElementById('diff-label').innerText = q.level;
+        document.getElementById('bar').style.width = `${((current + 1)/15)*100}%`;
+        document.getElementById('q-text').innerText = q.q;
+        document.getElementById('opt-list').innerHTML = q.options.map(o => `<li>${o}</li>`).join('');
+    }
+
+    function submitAnswer(ans) {
+        const isCorrect = ans === questions[current].correct;
+        if(isCorrect) score++;
+        results.push(isCorrect ? "Correct" : "Incorrect");
+        
+        current++;
+        if(current < 15) showQuestion();
+        else finalize();
+    }
+
+    async function finalize() {
+        document.getElementById('quiz-content').classList.add('hidden');
+        document.getElementById('end-screen').classList.remove('hidden');
+        
+        const payload = { name: userName, score: score, details: results };
+        
+        try {
+            // Using fetch to post to Google Script
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // Required for Google Scripts
+                cache: "no-cache",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            document.getElementById('end-screen').innerHTML = `<h2>Quiz Complete!</h2><p>${userName}, your score: ${score}/15</p>`;
+        } catch (e) {
+            document.getElementById('end-screen').innerHTML = `<h2>Error saving results.</h2>`;
+        }
+    }
 </script>
-
 </body>
 </html>
