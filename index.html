@@ -78,7 +78,7 @@
 <div id="quiz-container">
     <div id="reg-screen" class="fade">
         <h1 style="text-align:center; margin:0;">Academic Elite</h1>
-        <p style="text-align:center; opacity:0.7; margin-bottom:30px;">Authorized Access Only</p>
+        <p style="text-align:center; opacity:0.7; margin-bottom:30px;">Weighted Competition Mode</p>
         
         <div id="form-group">
             <input type="text" id="username" placeholder="Assigned Username">
@@ -121,20 +121,22 @@
     <div id="end-screen" class="hidden fade" style="text-align:center;">
         <h2>Quiz Complete</h2>
         <p id="final-msg" style="margin-bottom:20px;"></p>
-        <button class="primary-btn" style="background:rgba(255,255,255,0.1);" onclick="location.reload()">Exit</button>
+        <button class="primary-btn" style="background:rgba(255,255,255,0.1);" onclick="location.reload()">Exit Portal</button>
     </div>
 </div>
 
 <script>
-    // CRITICAL: Replace with your Google Web App URL
+    // --- CONFIGURATION ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyMPZIas47on1j6uCN_LZeOPoW2Wc5tu8dnezFpo-1-jeF3xJ1zafPlq3RlGlrhFw5N/exec";
 
-    // Credentials
     const AUTHORIZED_USERS = {
         "Student_01": "Pass1",
         "Student_02": "Pass2",
         "Admin": "Master"
     };
+
+    // Weighted Scoring Values
+    const POINTS = { "Easy": 1, "Average": 3, "Hard": 5 };
 
     const questions = [
         {q: "Powerhouse of the cell?", options: ["A. Nucleus", "B. Mitochondria", "C. Ribosome", "D. Golgi"], correct: "B", level: "Easy"},
@@ -159,8 +161,10 @@
     let logs = [];
     let uName = "";
 
+    // --- LOGIC ---
+
     async function syncToSheet(currentScore, details) {
-        // We use "text/plain" to avoid CORS pre-flight blocks
+        // "text/plain" is used to bypass CORS pre-flight browser blocks
         return fetch(SCRIPT_URL, {
             method: "POST",
             mode: "no-cors",
@@ -180,18 +184,17 @@
             regBtn.disabled = true;
 
             try {
-                // SEND INITIAL DATA (Name appears on monitor with 0 pts)
-                await syncToSheet(0, ["Registration Entry"]);
-                
+                // Send Registration Ping (0 points)
+                await syncToSheet(0, ["Registration Success"]);
                 document.getElementById('form-group').classList.add('hidden');
                 document.getElementById('proceed-group').classList.remove('hidden');
             } catch (e) {
-                alert("Sync failed. Check internet.");
+                alert("Connection failed. Check your internet.");
                 regBtn.innerText = "Verify Identity";
                 regBtn.disabled = false;
             }
         } else {
-            alert("Invalid Credentials.");
+            alert("❌ Invalid credentials.");
         }
     }
 
@@ -212,13 +215,18 @@
     }
 
     async function select(ans) {
-        const isCorrect = ans === questions[current].correct;
-        if(isCorrect) score++;
+        const q = questions[current];
+        const isCorrect = ans === q.correct;
+        
+        // Apply points based on category
+        if(isCorrect) {
+            score += POINTS[q.level];
+        }
         logs.push(isCorrect ? "Correct" : "Incorrect");
 
         const qNum = current + 1;
         if(qNum === 5 || qNum === 10) {
-            await showRankings(`End of Round: ${questions[current].level}`);
+            await showRankings(`Round Over: ${q.level}`);
         } else if (qNum === 15) {
             finish();
         } else {
@@ -231,7 +239,7 @@
         document.getElementById('quiz-content').classList.add('hidden');
         document.getElementById('ranking-screen').classList.remove('hidden');
         document.getElementById('rank-title').innerText = title;
-        document.getElementById('my-score').innerText = `Current Score: ${score}/15`;
+        document.getElementById('my-score').innerText = `Total Points: ${score} / 45`;
 
         await syncToSheet(score, logs);
 
@@ -252,7 +260,7 @@
     async function finish() {
         document.getElementById('quiz-content').classList.add('hidden');
         document.getElementById('end-screen').classList.remove('hidden');
-        document.getElementById('final-msg').innerText = `${uName}, your final score is ${score}/15.`;
+        document.getElementById('final-msg').innerText = `${uName}, your final points total is ${score}/45.`;
         await syncToSheet(score, logs);
     }
 </script>
