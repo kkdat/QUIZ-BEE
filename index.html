@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Quiz Bee - Stage Mode</title>
+    <title>Elite Quiz Bee - Secure Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -11,6 +11,7 @@
             --glass-bg: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.15);
             --primary-blue: #3b82f6;
+            --success-green: #10b981;
         }
 
         body {
@@ -30,12 +31,24 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.3);
         }
 
-        /* Leaderboard Styling */
-        .ranking-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .ranking-table th { text-align: left; color: #60a5fa; font-size: 0.8rem; text-transform: uppercase; padding-bottom: 10px; }
-        .ranking-table td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.95rem; }
-        
-        /* Elements */
+        /* Form Styling */
+        input {
+            width: 100%; padding: 15px; border-radius: 12px; 
+            border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); 
+            color: white; margin-bottom: 15px; box-sizing: border-box; outline: none;
+        }
+        input:focus { border-color: var(--primary-blue); }
+
+        .primary-btn {
+            width: 100%; padding: 15px; background: var(--primary-blue); color: white;
+            border: none; border-radius: 12px; cursor: pointer; font-weight: 600;
+            transition: 0.3s;
+        }
+        .primary-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .proceed-btn { background: var(--success-green); margin-top: 10px; }
+
+        /* Quiz Elements */
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .badge-easy { background: rgba(16, 185, 129, 0.2); color: #10b981; }
         .badge-average { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
@@ -49,26 +62,32 @@
             aspect-ratio: 1/1; border: 1px solid var(--glass-border); border-radius: 15px;
             background: rgba(255,255,255,0.05); color: white; font-weight: 700; cursor: pointer; transition: 0.2s;
         }
-        .choice-btn:hover { background: var(--primary-blue); transform: translateY(-3px); }
-
-        .primary-btn {
-            width: 100%; padding: 15px; background: var(--primary-blue); color: white;
-            border: none; border-radius: 12px; cursor: pointer; font-weight: 600;
-        }
+        .choice-btn:hover { background: var(--primary-blue); }
 
         .hidden { display: none; }
         .fade { animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .reg-success { color: var(--success-green); font-weight: 600; margin-bottom: 15px; display: block; }
     </style>
 </head>
 <body>
 
 <div id="quiz-container">
-    <div id="start-screen" class="fade">
+    <div id="reg-screen" class="fade">
         <h1 style="text-align:center; margin:0;">Tournament Bee</h1>
-        <p style="text-align:center; opacity:0.7; margin-bottom:30px;">3 Rounds • Real-time Rankings</p>
-        <input type="text" id="username" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; margin-bottom:20px; box-sizing:border-box;" placeholder="Full Name">
-        <button class="primary-btn" onclick="startQuiz()">Enter Arena</button>
+        <p style="text-align:center; opacity:0.7; margin-bottom:30px;">Registration & Security Portal</p>
+        
+        <div id="form-group">
+            <input type="text" id="username" placeholder="Full Name">
+            <input type="password" id="userpass" placeholder="Assigned Unique Password">
+            <button class="primary-btn" id="reg-btn" onclick="registerUser()">Register Identity</button>
+        </div>
+
+        <div id="proceed-group" class="hidden" style="text-align:center;">
+            <span class="reg-success">✓ Identity Verified Successfully</span>
+            <button class="primary-btn proceed-btn" onclick="startQuiz()">Proceed to Quiz Arena</button>
+        </div>
     </div>
 
     <div id="quiz-content" class="hidden fade">
@@ -89,22 +108,23 @@
 
     <div id="ranking-screen" class="hidden fade" style="text-align:center;">
         <h2 id="rank-title">Round Rankings</h2>
-        <table class="ranking-table">
-            <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
-            <tbody id="leaderboard-body"></tbody>
-        </table>
+        <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 20px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
+            <p style="font-size: 0.8rem; opacity: 0.6; margin: 0;">YOUR CURRENT RANK</p>
+            <div id="my-rank" style="font-size: 3.5rem; font-weight: 800; color: #60a5fa;">#--</div>
+            <p id="my-score" style="margin: 5px 0 0 0; font-weight: 600;"></p>
+        </div>
         <button class="primary-btn" onclick="nextRound()">Next Round</button>
     </div>
 
     <div id="end-screen" class="hidden fade" style="text-align:center;">
         <h2>Quiz Complete</h2>
         <p id="final-msg"></p>
-        <button class="primary-btn" onclick="location.reload()">Return Home</button>
+        <button class="primary-btn" onclick="location.reload()">Exit Portal</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcpU7M4PcQTls0NwnS9WzTdW4twRtZNyco2mPqJIEnhgMpqEbF1QO1rs4nlxKMR2Qj/exec";
+    const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE";
 
     const questions = [
         {q: "Powerhouse of the cell?", options: ["A. Nucleus", "B. Mitochondria", "C. Ribosome", "D. Golgi"], correct: "B", level: "Easy"},
@@ -128,11 +148,30 @@
     let score = 0;
     let logs = [];
     let uName = "";
+    let uPass = "";
+
+    async function registerUser() {
+        uName = document.getElementById('username').value.trim();
+        uPass = document.getElementById('userpass').value.trim();
+
+        if(!uName || !uPass) return alert("Please fill in both Name and Password.");
+
+        // Visual change
+        document.getElementById('form-group').classList.add('hidden');
+        document.getElementById('proceed-group').classList.remove('hidden');
+
+        // Initial log to Google Sheets to mark attendance
+        try {
+            await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                mode: "no-cors", 
+                body: JSON.stringify({ name: uName, pass: uPass, score: 0, details: ["Registered"] })
+            });
+        } catch(e) { console.log("Silent registration log failed."); }
+    }
 
     function startQuiz() {
-        uName = document.getElementById('username').value.trim();
-        if(!uName) return alert("Enter your name");
-        document.getElementById('start-screen').classList.add('hidden');
+        document.getElementById('reg-screen').classList.add('hidden');
         document.getElementById('quiz-content').classList.remove('hidden');
         render();
     }
@@ -167,14 +206,19 @@
         document.getElementById('quiz-content').classList.add('hidden');
         document.getElementById('ranking-screen').classList.remove('hidden');
         document.getElementById('rank-title').innerText = title;
+        document.getElementById('my-score').innerText = `Current Score: ${score}/15`;
 
         // Save progress
         await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: uName, score: score, details: logs })});
 
-        // Fetch Rankings
-        const res = await fetch(`${SCRIPT_URL}?action=getRankings`);
-        const data = await res.json();
-        document.getElementById('leaderboard-body').innerHTML = data.map((p, i) => `<tr><td>#${i+1}</td><td>${p.name}</td><td>${p.score}</td></tr>`).join('');
+        // Fetch Private Rank
+        try {
+            const res = await fetch(`${SCRIPT_URL}?action=getMyStatus&name=${encodeURIComponent(uName)}`);
+            const data = await res.json();
+            document.getElementById('my-rank').innerText = `#${data.rank}`;
+        } catch(e) { 
+            document.getElementById('my-rank').innerText = "Logged"; 
+        }
     }
 
     function nextRound() {
