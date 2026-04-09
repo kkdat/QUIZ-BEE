@@ -3,186 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Quiz Bee 2026 - Glass Edition</title>
+    <title>Elite Quiz Bee - Stage Mode</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Vibrant Blue Palette */
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e40af 50%, #60a5fa 100%);
-            --primary-blue: #3b82f6;
-            --dark-blue: #1d4ed8;
-            --sky-blue: #60a5fa;
-            --success-green: #10b981;
-            
-            /* Glassmorphism Variables */
             --glass-bg: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-text: rgba(255, 255, 255, 0.95);
-            --glass-muted: rgba(255, 255, 255, 0.7);
+            --primary-blue: #3b82f6;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             background: var(--bg-gradient);
             background-attachment: fixed;
-            color: var(--glass-text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            color: white;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; margin: 0; overflow: hidden;
         }
 
-        /* Glassmorphism Main Container */
         #quiz-container {
             background: var(--glass-bg);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            width: 90%;
-            max-width: 520px;
-            padding: 40px;
-            border-radius: 30px;
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transition: all 0.3s ease;
-            position: relative;
+            width: 90%; max-width: 500px; padding: 40px;
+            border-radius: 30px; border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
         }
 
-        h1 { font-size: 2rem; font-weight: 700; text-align: center; margin-bottom: 5px; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-        p.subtitle { text-align: center; color: var(--glass-muted); margin-bottom: 30px; font-size: 1rem; }
-
-        /* Header & Progress (More Vibrant) */
-        .header-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .badge { padding: 5px 14px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: white; }
-        .badge-easy { background: rgba(16, 185, 129, 0.3); border: 1px solid rgba(16, 185, 129, 0.5); }
-        .badge-average { background: rgba(245, 158, 11, 0.3); border: 1px solid rgba(245, 158, 11, 0.5); }
-        .badge-hard { background: rgba(239, 68, 68, 0.3); border: 1px solid rgba(239, 68, 68, 0.5); }
+        /* Leaderboard Styling */
+        .ranking-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .ranking-table th { text-align: left; color: #60a5fa; font-size: 0.8rem; text-transform: uppercase; padding-bottom: 10px; }
+        .ranking-table td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 0.95rem; }
         
-        .progress-container { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 35px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--sky-blue), var(--primary-blue)); border-radius: 10px; width: 0%; transition: width 0.4s ease-out; }
+        /* Elements */
+        .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .badge-easy { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .badge-average { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .badge-hard { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
-        /* Question Area */
-        .question-area { min-height: 200px; }
-        .question-text { font-size: 1.35rem; font-weight: 600; line-height: 1.4; margin-bottom: 20px; color: white; }
-        .options-display { list-style: none; padding: 0; margin-bottom: 35px; }
-        .options-display li { 
-            padding: 14px 18px; background: rgba(255,255,255,0.04); border: 1px solid var(--glass-border); 
-            border-radius: 15px; margin-bottom: 12px; font-size: 1rem; color: var(--glass-muted);
-            backdrop-filter: blur(5px);
-        }
+        .progress-bar { height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; margin: 20px 0; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary-blue); transition: width 0.5s; width: 0%; }
 
-        /* Glass Interaction Buttons (Special Effects) */
-        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
         .choice-btn {
-            aspect-ratio: 1/1; border: 1px solid var(--glass-border); border-radius: 20px;
-            background: rgba(255,255,255,0.03); font-size: 1.5rem; font-weight: 700; color: white;
-            cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative; overflow: hidden;
-            backdrop-filter: blur(5px);
+            aspect-ratio: 1/1; border: 1px solid var(--glass-border); border-radius: 15px;
+            background: rgba(255,255,255,0.05); color: white; font-weight: 700; cursor: pointer; transition: 0.2s;
         }
-        .choice-btn:hover { 
-            background: rgba(59, 130, 246, 0.15);
-            border-color: rgba(59, 130, 246, 0.5);
-            transform: translateY(-3px); 
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); 
-        }
-        .choice-btn:active { transform: translateY(0px); }
-
-        /* Glass Inputs & Primary Blue Button */
-        input[type="text"] {
-            width: 100%; padding: 16px 22px; border-radius: 15px; border: 1px solid var(--glass-border);
-            font-size: 1.1rem; margin-bottom: 25px; outline: none; transition: 0.2s;
-            background: rgba(255,255,255,0.03); color: white;
-        }
-        input[type="text"]:focus { border-color: var(--primary-blue); background: rgba(59, 130, 246, 0.05); }
-        input[type="text"]::placeholder { color: rgba(255,255,255,0.4); }
+        .choice-btn:hover { background: var(--primary-blue); transform: translateY(-3px); }
 
         .primary-btn {
-            width: 100%; padding: 18px; background: linear-gradient(135deg, var(--primary-blue), var(--dark-blue));
-            color: white; border: none; border-radius: 15px; font-size: 1.1rem; font-weight: 600; 
-            cursor: pointer; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.1rem;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            width: 100%; padding: 15px; background: var(--primary-blue); color: white;
+            border: none; border-radius: 12px; cursor: pointer; font-weight: 600;
         }
-        .primary-btn:hover { opacity: 0.9; transform: scale(1.01); }
 
-        /* End Screen Glass Polish */
-        .status-msg { font-weight: 600; color: var(--success-green); margin-top: 25px; font-size: 1.1rem; text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
-        .loader-ring { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-radius: 50%; border-top-color: var(--sky-blue); animation: spin 1s ease-in-out infinite; margin: 20px auto; }
-
-        /* Utility Classes */
         .hidden { display: none; }
-        .fade-in { animation: fadeIn 0.4s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .fade { animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div id="quiz-container">
-    <div id="start-screen" class="fade-in">
-        <h1>Academic Elite</h1>
-        <p class="subtitle">Quiz Bee Challenge 2026</p>
-        <input type="text" id="username" placeholder="Registration Name" autocomplete="off">
-        <button class="primary-btn" onclick="startQuiz()">Launch Quiz</button>
+    <div id="start-screen" class="fade">
+        <h1 style="text-align:center; margin:0;">Tournament Bee</h1>
+        <p style="text-align:center; opacity:0.7; margin-bottom:30px;">3 Rounds • Real-time Rankings</p>
+        <input type="text" id="username" style="width:100%; padding:15px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(255,255,255,0.05); color:white; margin-bottom:20px; box-sizing:border-box;" placeholder="Full Name">
+        <button class="primary-btn" onclick="startQuiz()">Enter Arena</button>
     </div>
 
-    <div id="quiz-content" class="hidden">
-        <div class="header-meta">
+    <div id="quiz-content" class="hidden fade">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
             <span id="diff-badge" class="badge">Easy</span>
-            <span id="q-counter" style="font-size: 0.9rem; font-weight: 600; color: var(--glass-muted);">Q 1 / 15</span>
+            <span id="q-counter" style="font-size:0.8rem; opacity:0.6;">Q 1/15</span>
         </div>
-        <div class="progress-container">
-            <div id="bar" class="progress-fill"></div>
-        </div>
-
-        <div class="question-area fade-in" id="q-frame">
-            <div id="q-text" class="question-text"></div>
-            <ul id="opt-list" class="options-display"></ul>
-        </div>
-
+        <div class="progress-bar"><div id="bar" class="progress-fill"></div></div>
+        <h2 id="q-text" style="min-height:80px; font-size:1.2rem;"></h2>
+        <ul id="opt-list" style="list-style:none; padding:0; margin-bottom:30px; opacity:0.8; font-size:0.9rem;"></ul>
         <div class="btn-grid">
-            <button class="choice-btn" onclick="handleSelect('A')">A</button>
-            <button class="choice-btn" onclick="handleSelect('B')">B</button>
-            <button class="choice-btn" onclick="handleSelect('C')">C</button>
-            <button class="choice-btn" onclick="handleSelect('D')">D</button>
+            <button class="choice-btn" onclick="select('A')">A</button>
+            <button class="choice-btn" onclick="select('B')">B</button>
+            <button class="choice-btn" onclick="select('C')">C</button>
+            <button class="choice-btn" onclick="select('D')">D</button>
         </div>
     </div>
 
-    <div id="end-screen" class="hidden" style="text-align:center;">
-        <div id="loader">
-            <h2 style="color:white;">Securely Logging...</h2>
-            <div class="loader-ring"></div>
-            <p style="color:var(--glass-muted);">Connecting to central registry</p>
-        </div>
-        <div id="final-stats" class="hidden fade-in">
-            <h2 style="font-size: 2.2rem; color: white; margin-bottom: 10px;">Submission Verified</h2>
-            <p id="score-text" style="font-size: 1.3rem; color: var(--glass-muted); line-height: 1.5;"></p>
-            <p class="status-msg">Your performance has been officially recorded.</p>
-            <button class="primary-btn" style="margin-top: 35px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);" onclick="location.reload()">Reset Portal</button>
-        </div>
+    <div id="ranking-screen" class="hidden fade" style="text-align:center;">
+        <h2 id="rank-title">Round Rankings</h2>
+        <table class="ranking-table">
+            <thead><tr><th>Rank</th><th>Name</th><th>Score</th></tr></thead>
+            <tbody id="leaderboard-body"></tbody>
+        </table>
+        <button class="primary-btn" onclick="nextRound()">Next Round</button>
+    </div>
+
+    <div id="end-screen" class="hidden fade" style="text-align:center;">
+        <h2>Quiz Complete</h2>
+        <p id="final-msg"></p>
+        <button class="primary-btn" onclick="location.reload()">Return Home</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE"; // PASTE YOUR URL HERE
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbydfwbwSZUfnFB4UtgBtVGXRAHgUqQSE2gB-8CgEde0Chj-dXeLn35-ybKBqlM--dQF/exec";
 
     const questions = [
-        {q: "What is the powerhouse of the cell?", options: ["A. Nucleus", "B. Mitochondria", "C. Ribosome", "D. Golgi Body"], correct: "B", level: "Easy"},
-        {q: "Which planet is known as the Red Planet?", options: ["A. Venus", "B. Mars", "C. Jupiter", "D. Saturn"], correct: "B", level: "Easy"},
-        {q: "What is the result of 15 + 27?", options: ["A. 42", "B. 32", "C. 44", "D. 39"], correct: "A", level: "Easy"},
-        {q: "How many colors are in a rainbow?", options: ["A. 6", "B. 8", "C. 7", "D. 9"], correct: "C", level: "Easy"},
-        {q: "Who is the primary author of the Declaration of Independence?", options: ["A. Washington", "B. Franklin", "C. Jefferson", "D. Adams"], correct: "C", level: "Easy"},
-        {q: "What is the chemical symbol for Gold?", options: ["A. Gd", "B. Ag", "C. Au", "D. Fe"], correct: "C", level: "Average"},
-        {q: "Largest country by land area?", options: ["A. China", "B. Canada", "C. Russia", "D. USA"], correct: "C", level: "Average"},
+        {q: "Powerhouse of the cell?", options: ["A. Nucleus", "B. Mitochondria", "C. Ribosome", "D. Golgi"], correct: "B", level: "Easy"},
+        {q: "The Red Planet?", options: ["A. Venus", "B. Mars", "C. Jupiter", "D. Saturn"], correct: "B", level: "Easy"},
+        {q: "Result of 15 + 27?", options: ["A. 42", "B. 32", "C. 44", "D. 39"], correct: "A", level: "Easy"},
+        {q: "Colors in a rainbow?", options: ["A. 6", "B. 8", "C. 7", "D. 9"], correct: "C", level: "Easy"},
+        {q: "Author of Declaration of Independence?", options: ["A. Washington", "B. Franklin", "C. Jefferson", "D. Adams"], correct: "C", level: "Easy"},
+        {q: "Chemical symbol for Gold?", options: ["A. Gd", "B. Ag", "C. Au", "D. Fe"], correct: "C", level: "Average"},
+        {q: "Largest country area?", options: ["A. China", "B. Canada", "C. Russia", "D. USA"], correct: "C", level: "Average"},
         {q: "Square root of 225?", options: ["A. 13", "B. 14", "C. 15", "D. 16"], correct: "C", level: "Average"},
         {q: "Who wrote 'Hamlet'?", options: ["A. Marlowe", "B. Dickens", "C. Shakespeare", "D. Austen"], correct: "C", level: "Average"},
-        {q: "Largest ocean on Earth?", options: ["A. Atlantic", "B. Indian", "C. Pacific", "D. Arctic"], correct: "C", level: "Average"},
-        {q: "Pi rounded to 4 decimal places?", options: ["A. 3.1415", "B. 3.1416", "C. 3.1414", "D. 3.1417"], correct: "B", level: "Hard"},
-        {q: "Which element is atomic number 79?", options: ["A. Platinum", "B. Gold", "C. Mercury", "D. Lead"], correct: "B", level: "Hard"},
+        {q: "Largest ocean?", options: ["A. Atlantic", "B. Indian", "C. Pacific", "D. Arctic"], correct: "C", level: "Average"},
+        {q: "Pi to 4 decimal places?", options: ["A. 3.1415", "B. 3.1416", "C. 3.1414", "D. 3.1417"], correct: "B", level: "Hard"},
+        {q: "Atomic number 79?", options: ["A. Platinum", "B. Gold", "C. Mercury", "D. Lead"], correct: "B", level: "Hard"},
         {q: "Capital of Kazakhstan?", options: ["A. Almaty", "B. Astana", "C. Tashkent", "D. Bishkek"], correct: "B", level: "Hard"},
-        {q: "Year the French Revolution began?", options: ["A. 1776", "B. 1789", "C. 1799", "D. 1804"], correct: "B", level: "Hard"},
-        {q: "Rarest human blood type?", options: ["A. O negative", "B. AB negative", "C. Rh-null", "D. B positive"], correct: "C", level: "Hard"}
+        {q: "Year French Revolution began?", options: ["A. 1776", "B. 1789", "C. 1799", "D. 1804"], correct: "B", level: "Hard"},
+        {q: "Rarest human blood type?", options: ["A. O-", "B. AB-", "C. Rh-null", "D. B+"], correct: "C", level: "Hard"}
     ];
 
     let current = 0;
@@ -192,7 +131,7 @@
 
     function startQuiz() {
         uName = document.getElementById('username').value.trim();
-        if(!uName) return alert("Name is required.");
+        if(!uName) return alert("Enter your name");
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('quiz-content').classList.remove('hidden');
         render();
@@ -200,58 +139,56 @@
 
     function render() {
         const q = questions[current];
-        const frame = document.getElementById('q-frame');
-        
-        frame.classList.remove('fade-in');
-        void frame.offsetWidth; // Reset animation
-        frame.classList.add('fade-in');
-
-        document.getElementById('q-counter').innerText = `Q ${current + 1} / 15`;
+        document.getElementById('diff-badge').innerText = q.level;
+        document.getElementById('diff-badge').className = `badge badge-${q.level.toLowerCase()}`;
+        document.getElementById('q-counter').innerText = `Q ${current + 1}/15`;
         document.getElementById('bar').style.width = `${((current + 1)/15)*100}%`;
-        
-        const badge = document.getElementById('diff-badge');
-        badge.innerText = q.level;
-        badge.className = `badge badge-${q.level.toLowerCase()}`;
-
         document.getElementById('q-text').innerText = q.q;
         document.getElementById('opt-list').innerHTML = q.options.map(o => `<li>${o}</li>`).join('');
     }
 
-    async function handleSelect(ans) {
+    async function select(ans) {
         const isCorrect = ans === questions[current].correct;
         if(isCorrect) score++;
         logs.push(isCorrect ? "Correct" : "Incorrect");
 
-        if(current < 14) {
+        const qNum = current + 1;
+        if(qNum === 5 || qNum === 10) {
+            await showRankings(`End of Round: ${questions[current].level}`);
+        } else if (qNum === 15) {
+            finish();
+        } else {
             current++;
             render();
-        } else {
-            finish();
         }
+    }
+
+    async function showRankings(title) {
+        document.getElementById('quiz-content').classList.add('hidden');
+        document.getElementById('ranking-screen').classList.remove('hidden');
+        document.getElementById('rank-title').innerText = title;
+
+        // Save progress
+        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: uName, score: score, details: logs })});
+
+        // Fetch Rankings
+        const res = await fetch(`${SCRIPT_URL}?action=getRankings`);
+        const data = await res.json();
+        document.getElementById('leaderboard-body').innerHTML = data.map((p, i) => `<tr><td>#${i+1}</td><td>${p.name}</td><td>${p.score}</td></tr>`).join('');
+    }
+
+    function nextRound() {
+        current++;
+        document.getElementById('ranking-screen').classList.add('hidden');
+        document.getElementById('quiz-content').classList.remove('hidden');
+        render();
     }
 
     async function finish() {
         document.getElementById('quiz-content').classList.add('hidden');
         document.getElementById('end-screen').classList.remove('hidden');
-
-        try {
-            // Using POST with no-cors to bridge domains (GitHub -> Google Sheets)
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: uName, score: score, details: logs })
-            });
-            
-            // Artificial delay for professional feel
-            setTimeout(() => {
-                document.getElementById('loader').classList.add('hidden');
-                document.getElementById('final-stats').classList.remove('hidden');
-                document.getElementById('score-text').innerText = `Challenge complete, ${uName}. Final Score: ${score} / 15.`;
-            }, 1800);
-        } catch (e) {
-            document.getElementById('loader').innerHTML = `<h2 style="color:#ef4444;">Connection Alert</h2><p>Data may not have synchronized properly. Keep this window open and notify coordinator.</p>`;
-        }
+        document.getElementById('final-msg').innerText = `${uName}, your final score is ${score}/15.`;
+        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: uName, score: score, details: logs })});
     }
 </script>
 </body>
