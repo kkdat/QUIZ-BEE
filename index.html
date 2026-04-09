@@ -25,30 +25,29 @@
 
         #quiz-container {
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
             width: 90%; max-width: 500px; padding: 40px;
             border-radius: 30px; border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
         }
 
-        /* Form Styling */
         input {
             width: 100%; padding: 15px; border-radius: 12px; 
             border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); 
             color: white; margin-bottom: 15px; box-sizing: border-box; outline: none;
+            font-family: inherit;
         }
         input:focus { border-color: var(--primary-blue); }
 
         .primary-btn {
             width: 100%; padding: 15px; background: var(--primary-blue); color: white;
             border: none; border-radius: 12px; cursor: pointer; font-weight: 600;
-            transition: 0.3s;
+            transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
         }
         .primary-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-
         .proceed-btn { background: var(--success-green); margin-top: 10px; }
 
-        /* Quiz Elements */
+        /* Quiz UI Elements */
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .badge-easy { background: rgba(16, 185, 129, 0.2); color: #10b981; }
         .badge-average { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
@@ -61,11 +60,12 @@
         .choice-btn {
             aspect-ratio: 1/1; border: 1px solid var(--glass-border); border-radius: 15px;
             background: rgba(255,255,255,0.05); color: white; font-weight: 700; cursor: pointer; transition: 0.2s;
+            font-size: 1.2rem;
         }
-        .choice-btn:hover { background: var(--primary-blue); }
+        .choice-btn:hover { background: var(--primary-blue); transform: scale(1.05); }
 
         .hidden { display: none; }
-        .fade { animation: fadeIn 0.5s; }
+        .fade { animation: fadeIn 0.5s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .reg-success { color: var(--success-green); font-weight: 600; margin-bottom: 15px; display: block; }
@@ -75,18 +75,18 @@
 
 <div id="quiz-container">
     <div id="reg-screen" class="fade">
-        <h1 style="text-align:center; margin:0;">Tournament Bee</h1>
-        <p style="text-align:center; opacity:0.7; margin-bottom:30px;">Registration & Security Portal</p>
+        <h1 style="text-align:center; margin:0;">Academic Elite</h1>
+        <p style="text-align:center; opacity:0.7; margin-bottom:30px;">Authorized Access Only</p>
         
         <div id="form-group">
-            <input type="text" id="username" placeholder="Full Name">
-            <input type="password" id="userpass" placeholder="Assigned Unique Password">
-            <button class="primary-btn" id="reg-btn" onclick="registerUser()">Register Identity</button>
+            <input type="text" id="username" placeholder="Assigned Username">
+            <input type="password" id="userpass" placeholder="Unique Password">
+            <button class="primary-btn" id="reg-btn" onclick="registerUser()">Verify Identity</button>
         </div>
 
         <div id="proceed-group" class="hidden" style="text-align:center;">
-            <span class="reg-success">✓ Identity Verified Successfully</span>
-            <button class="primary-btn proceed-btn" onclick="startQuiz()">Proceed to Quiz Arena</button>
+            <span class="reg-success">✓ Access Granted</span>
+            <button class="primary-btn proceed-btn" onclick="startQuiz()">Proceed to Arena</button>
         </div>
     </div>
 
@@ -118,13 +118,23 @@
 
     <div id="end-screen" class="hidden fade" style="text-align:center;">
         <h2>Quiz Complete</h2>
-        <p id="final-msg"></p>
-        <button class="primary-btn" onclick="location.reload()">Exit Portal</button>
+        <p id="final-msg" style="margin-bottom:20px;"></p>
+        <div style="padding:10px; background:rgba(16, 185, 129, 0.1); border-radius:10px; color:#10b981; font-weight:600;">Data Synced to Central Monitor</div>
+        <button class="primary-btn" style="margin-top:25px; background:rgba(255,255,255,0.1);" onclick="location.reload()">Exit</button>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_URL_HERE";
+    // --- CONFIGURATION ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcpU7M4PcQTls0NwnS9WzTdW4twRtZNyco2mPqJIEnhgMpqEbF1QO1rs4nlxKMR2Qj/exec";
+
+    // ASSIGN PASSWORDS HERE: "Username": "Password"
+    const AUTHORIZED_USERS = {
+        "DARWIN A": "11061996",
+        "JEROME A": "11262001",
+        "RHEADEL A": "07152008",
+        "Admin": "MasterAccess"
+    };
 
     const questions = [
         {q: "Powerhouse of the cell?", options: ["A. Nucleus", "B. Mitochondria", "C. Ribosome", "D. Golgi"], correct: "B", level: "Easy"},
@@ -148,26 +158,20 @@
     let score = 0;
     let logs = [];
     let uName = "";
-    let uPass = "";
 
-    async function registerUser() {
-        uName = document.getElementById('username').value.trim();
-        uPass = document.getElementById('userpass').value.trim();
+    // --- LOGIC ---
 
-        if(!uName || !uPass) return alert("Please fill in both Name and Password.");
+    function registerUser() {
+        const nameInput = document.getElementById('username').value.trim();
+        const passInput = document.getElementById('userpass').value.trim();
 
-        // Visual change
-        document.getElementById('form-group').classList.add('hidden');
-        document.getElementById('proceed-group').classList.remove('hidden');
-
-        // Initial log to Google Sheets to mark attendance
-        try {
-            await fetch(SCRIPT_URL, { 
-                method: "POST", 
-                mode: "no-cors", 
-                body: JSON.stringify({ name: uName, pass: uPass, score: 0, details: ["Registered"] })
-            });
-        } catch(e) { console.log("Silent registration log failed."); }
+        if (AUTHORIZED_USERS[nameInput] && AUTHORIZED_USERS[nameInput] === passInput) {
+            uName = nameInput;
+            document.getElementById('form-group').classList.add('hidden');
+            document.getElementById('proceed-group').classList.remove('hidden');
+        } else {
+            alert("❌ Invalid Username or Password. Please contact the coordinator.");
+        }
     }
 
     function startQuiz() {
@@ -208,17 +212,15 @@
         document.getElementById('rank-title').innerText = title;
         document.getElementById('my-score').innerText = `Current Score: ${score}/15`;
 
-        // Save progress
+        // Sync with Sheet
         await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: uName, score: score, details: logs })});
 
-        // Fetch Private Rank
+        // Fetch My Rank
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getMyStatus&name=${encodeURIComponent(uName)}`);
             const data = await res.json();
             document.getElementById('my-rank').innerText = `#${data.rank}`;
-        } catch(e) { 
-            document.getElementById('my-rank').innerText = "Logged"; 
-        }
+        } catch(e) { document.getElementById('my-rank').innerText = "Logged"; }
     }
 
     function nextRound() {
