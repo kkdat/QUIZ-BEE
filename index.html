@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Quiz Bee - Secure Portal</title>
+    <title>Elite Quiz Bee - Competition Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -26,6 +26,7 @@
         #quiz-container {
             background: var(--glass-bg);
             backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             width: 90%; max-width: 500px; padding: 40px;
             border-radius: 30px; border: 1px solid var(--glass-border);
             box-shadow: 0 25px 50px rgba(0,0,0,0.4);
@@ -44,10 +45,11 @@
             border: none; border-radius: 12px; cursor: pointer; font-weight: 600;
             transition: 0.3s; text-transform: uppercase; letter-spacing: 1px;
         }
-        .primary-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .primary-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-2px); }
+        .primary-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .proceed-btn { background: var(--success-green); margin-top: 10px; }
 
-        /* Quiz UI Elements */
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .badge-easy { background: rgba(16, 185, 129, 0.2); color: #10b981; }
         .badge-average { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
@@ -85,8 +87,8 @@
         </div>
 
         <div id="proceed-group" class="hidden" style="text-align:center;">
-            <span class="reg-success">✓ Access Granted</span>
-            <button class="primary-btn proceed-btn" onclick="startQuiz()">Proceed to Arena</button>
+            <span class="reg-success">✓ Access Granted & Synced</span>
+            <button class="primary-btn proceed-btn" onclick="startQuiz()">Begin Quiz Now</button>
         </div>
     </div>
 
@@ -119,20 +121,20 @@
     <div id="end-screen" class="hidden fade" style="text-align:center;">
         <h2>Quiz Complete</h2>
         <p id="final-msg" style="margin-bottom:20px;"></p>
-        <div style="padding:10px; background:rgba(16, 185, 129, 0.1); border-radius:10px; color:#10b981; font-weight:600;">Data Synced to Central Monitor</div>
-        <button class="primary-btn" style="margin-top:25px; background:rgba(255,255,255,0.1);" onclick="location.reload()">Exit</button>
+        <div style="padding:10px; background:rgba(16, 185, 129, 0.1); border-radius:10px; color:#10b981; font-weight:600;">Final Results Recorded</div>
+        <button class="primary-btn" style="margin-top:25px; background:rgba(255,255,255,0.1);" onclick="location.reload()">Exit Portal</button>
     </div>
 </div>
 
 <script>
     // --- CONFIGURATION ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby8BA5Aluft8IbQoMq5292d_Elb_B0B5Fggpp5Jt4DVEk7smGWmsS2u2kNghFIM3ePC/exec";
+    // REPLACE THIS WITH YOUR DEPLOYED WEB APP URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcpU7M4PcQTls0NwnS9WzTdW4twRtZNyco2mPqJIEnhgMpqEbF1QO1rs4nlxKMR2Qj/exec";
 
-    // ASSIGN PASSWORDS HERE: "Username": "Password"
+    // Edit your participants here
     const AUTHORIZED_USERS = {
-        "DARWIN A": "11061996",
-        "JEROME A": "11262001",
-        "RHEADEL A": "07152008",
+        "Student_01": "Pass1",
+        "Student_02": "Pass2",
         "Admin": "MasterAccess"
     };
 
@@ -159,18 +161,34 @@
     let logs = [];
     let uName = "";
 
-    // --- LOGIC ---
+    // --- FUNCTIONS ---
 
-    function registerUser() {
+    async function registerUser() {
         const nameInput = document.getElementById('username').value.trim();
         const passInput = document.getElementById('userpass').value.trim();
 
         if (AUTHORIZED_USERS[nameInput] && AUTHORIZED_USERS[nameInput] === passInput) {
             uName = nameInput;
-            document.getElementById('form-group').classList.add('hidden');
-            document.getElementById('proceed-group').classList.remove('hidden');
+            const regBtn = document.getElementById('reg-btn');
+            regBtn.innerText = "Syncing...";
+            regBtn.disabled = true;
+
+            // Initial POST to Sheet to show name on Monitor immediately
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: JSON.stringify({ name: uName, score: 0, details: ["Registered"] })
+                });
+                document.getElementById('form-group').classList.add('hidden');
+                document.getElementById('proceed-group').classList.remove('hidden');
+            } catch (e) {
+                alert("Connection failed. Try again.");
+                regBtn.innerText = "Verify Identity";
+                regBtn.disabled = false;
+            }
         } else {
-            alert("❌ Invalid Username or Password. Please contact the coordinator.");
+            alert("❌ Invalid credentials.");
         }
     }
 
@@ -197,7 +215,7 @@
 
         const qNum = current + 1;
         if(qNum === 5 || qNum === 10) {
-            await showRankings(`End of Round: ${questions[current].level}`);
+            await showRankings(`End of ${questions[current].level} Round`);
         } else if (qNum === 15) {
             finish();
         } else {
@@ -212,15 +230,15 @@
         document.getElementById('rank-title').innerText = title;
         document.getElementById('my-score').innerText = `Current Score: ${score}/15`;
 
-        // Sync with Sheet
+        // Sync data
         await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: uName, score: score, details: logs })});
 
-        // Fetch My Rank
+        // Get private rank
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getMyStatus&name=${encodeURIComponent(uName)}`);
             const data = await res.json();
             document.getElementById('my-rank').innerText = `#${data.rank}`;
-        } catch(e) { document.getElementById('my-rank').innerText = "Logged"; }
+        } catch(e) { document.getElementById('my-rank').innerText = "--"; }
     }
 
     function nextRound() {
