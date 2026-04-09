@@ -121,21 +121,19 @@
     <div id="end-screen" class="hidden fade" style="text-align:center;">
         <h2>Quiz Complete</h2>
         <p id="final-msg" style="margin-bottom:20px;"></p>
-        <div style="padding:10px; background:rgba(16, 185, 129, 0.1); border-radius:10px; color:#10b981; font-weight:600;">Final Results Recorded</div>
-        <button class="primary-btn" style="margin-top:25px; background:rgba(255,255,255,0.1);" onclick="location.reload()">Exit Portal</button>
+        <button class="primary-btn" style="background:rgba(255,255,255,0.1);" onclick="location.reload()">Exit</button>
     </div>
 </div>
 
 <script>
-    // --- CONFIGURATION ---
-    // REPLACE THIS WITH YOUR DEPLOYED WEB APP URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcpU7M4PcQTls0NwnS9WzTdW4twRtZNyco2mPqJIEnhgMpqEbF1QO1rs4nlxKMR2Qj/exec";
+    // CRITICAL: Replace with your Google Web App URL
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8cAX3_Rfe1zKCi9ayjYmoFQ7Msp1dCDMql2FJ4jTX9gqyzA53Wf2NjkfXrTT53Kv1/exec";
 
-    // Edit your participants here
+    // Credentials
     const AUTHORIZED_USERS = {
         "Student_01": "Pass1",
         "Student_02": "Pass2",
-        "Admin": "MasterAccess"
+        "Admin": "Master"
     };
 
     const questions = [
@@ -161,7 +159,15 @@
     let logs = [];
     let uName = "";
 
-    // --- FUNCTIONS ---
+    async function syncToSheet(currentScore, details) {
+        // We use "text/plain" to avoid CORS pre-flight blocks
+        return fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify({ name: uName, score: currentScore, details: details })
+        });
+    }
 
     async function registerUser() {
         const nameInput = document.getElementById('username').value.trim();
@@ -173,22 +179,19 @@
             regBtn.innerText = "Syncing...";
             regBtn.disabled = true;
 
-            // Initial POST to Sheet to show name on Monitor immediately
             try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    body: JSON.stringify({ name: uName, score: 0, details: ["Registered"] })
-                });
+                // SEND INITIAL DATA (Name appears on monitor with 0 pts)
+                await syncToSheet(0, ["Registration Entry"]);
+                
                 document.getElementById('form-group').classList.add('hidden');
                 document.getElementById('proceed-group').classList.remove('hidden');
             } catch (e) {
-                alert("Connection failed. Try again.");
+                alert("Sync failed. Check internet.");
                 regBtn.innerText = "Verify Identity";
                 regBtn.disabled = false;
             }
         } else {
-            alert("❌ Invalid credentials.");
+            alert("Invalid Credentials.");
         }
     }
 
@@ -215,7 +218,7 @@
 
         const qNum = current + 1;
         if(qNum === 5 || qNum === 10) {
-            await showRankings(`End of ${questions[current].level} Round`);
+            await showRankings(`End of Round: ${questions[current].level}`);
         } else if (qNum === 15) {
             finish();
         } else {
@@ -230,10 +233,8 @@
         document.getElementById('rank-title').innerText = title;
         document.getElementById('my-score').innerText = `Current Score: ${score}/15`;
 
-        // Sync data
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: uName, score: score, details: logs })});
+        await syncToSheet(score, logs);
 
-        // Get private rank
         try {
             const res = await fetch(`${SCRIPT_URL}?action=getMyStatus&name=${encodeURIComponent(uName)}`);
             const data = await res.json();
@@ -252,7 +253,7 @@
         document.getElementById('quiz-content').classList.add('hidden');
         document.getElementById('end-screen').classList.remove('hidden');
         document.getElementById('final-msg').innerText = `${uName}, your final score is ${score}/15.`;
-        await fetch(SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify({ name: uName, score: score, details: logs })});
+        await syncToSheet(score, logs);
     }
 </script>
 </body>
